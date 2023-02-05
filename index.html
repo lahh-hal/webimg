@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Person Segmentation</title>
+  </head>
+  <body>
+    <h1>Person Segmentation</h1>
+    <input type="file" id="input-image" />
+    <br />
+    <canvas id="output-canvas"></canvas>
+
+    <script>
+      const inputImage = document.getElementById("input-image");
+      const outputCanvas = document.getElementById("output-canvas");
+      const ctx = outputCanvas.getContext("2d");
+
+      inputImage.addEventListener("change", async function () {
+        // Load the input image
+        const img = new Image();
+        img.src = URL.createObjectURL(inputImage.files[0]);
+        await new Promise((resolve) => (img.onload = resolve));
+
+        // Scale the canvas to match the input image size
+        outputCanvas.width = img.width;
+        outputCanvas.height = img.height;
+
+        // Draw the input image onto the canvas
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+
+        // Run the semantic segmentation model
+        const result = await model.segmentPerson(outputCanvas);
+
+        // Draw the person mask onto the canvas
+        const personMask = result.data.map((value, index) =>
+          value[0] > 0.5 ? 255 : 0
+        );
+        const personMaskImageData = new ImageData(
+          new Uint8ClampedArray(personMask),
+          img.width,
+          img.height
+        );
+        ctx.putImageData(personMaskImageData, 0, 0);
+      });
+    </script>
+  </body>
+</html>
